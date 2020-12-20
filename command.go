@@ -16,8 +16,16 @@ var runCommand = cli.Command{
 			mydocker run -ti [command]`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach container",
+		},
+		cli.BoolFlag{
 			Name:  "ti",
 			Usage: "enable tty",
+		},
+		cli.StringFlag{
+			Name:  "name",
+			Usage: "container name",
 		},
 		cli.StringFlag{
 			Name:  "v",
@@ -47,6 +55,11 @@ var runCommand = cli.Command{
 		}
 		//解析tty
 		tty := context.Bool("ti")
+		//解析detach
+		detach := context.Bool("d")
+		if tty && detach {
+			return fmt.Errorf("ti and d paramter can not both provided")
+		}
 		//解析资源限制
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
@@ -56,8 +69,10 @@ var runCommand = cli.Command{
 
 		//把volume参数传给Run函数
 		volume := context.String("v")
+		//将取到的容器名称传递下去，如果没有取到值为空
+		containerName := context.String("name")
 		//开始运行
-		Run(tty, cmdArray, resConf, volume)
+		Run(tty, cmdArray, resConf, volume, containerName)
 		return nil
 	},
 }

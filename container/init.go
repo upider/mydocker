@@ -73,7 +73,7 @@ func setUpMount() {
 }
 
 //pivotRoot 将root挂载为根目录
-func pivotRoot(root string) error {
+func realChroot(root string) error {
 	log.Infof("change root")
 	if err := syscall.Chroot(root); err != nil {
 		return fmt.Errorf("Error after fallback to chroot: %v", err)
@@ -82,17 +82,17 @@ func pivotRoot(root string) error {
 }
 
 //pivotRoot 将root挂载为根目录
-func pivotRoot2(root string) error {
-	if err := syscall.Unshare(syscall.CLONE_NEWNS); err != nil {
-		return fmt.Errorf("Error creating mount namespace before pivot: %v", err)
-	}
+//如果不支持pivotRoot，可以直接使用realChroot
+func pivotRoot(root string) error {
 	/*
 		为了使当前root的老 root 和新 root 不在同一个文件系统下，我们把root重新mount了一次
 		bind mount是把相同的内容换了一个挂载点的挂载方法
 	*/
-	if err := syscall.Mount(root, root, "bind", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
-		return fmt.Errorf("Mount rootfs to itself error: %v", err)
-	}
+	//if err := syscall.Mount(root, root, "bind", syscall.MS_BIND|syscall.MS_REC, ""); err != nil {
+	//    return fmt.Errorf("Mount rootfs to itself error: %v", err)
+	//}
+	//原方法是因为没有挂载overlay文件系统，在这个版本的代码中，已经先将/root/busybox文件夹
+	//挂载到了/root/mnt，所以不用再执行此方法
 
 	//创建rootfs/.pivot_root存储old_root
 	pivotDir := filepath.Join(root, ".pivot_root")

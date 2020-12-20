@@ -9,6 +9,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	RUNNING             string = "running"
+	STOP                string = "stopped"
+	Exit                string = "exited"
+	DefaultInfoLocation string = "/var/run/mydocker/%s/"
+	ConfigName          string = "config.json"
+)
+
+//ContainerInfo ...
+type ContainerInfo struct {
+	Pid         string `json:"pid"`        //容器的init进程在宿主机上的 PID
+	ID          string `json:"id"`         //容器Id
+	Name        string `json:"name"`       //容器名
+	Command     string `json:"command"`    //容器内init运行命令
+	CreatedTime string `json:"createTime"` //创建时间
+	Status      string `json:"status"`     //容器的状态
+}
+
 /*
 这里是父进程，也就是当前进程执行的内容，根据上 章介绍的内容，应该比较容易明白。
 1. 这里的/proc/self/exe 调用中，/proc/self/指的是当前运行进程自己的环境，exec其实就是自己
@@ -60,7 +78,7 @@ func NewPipe() (*os.File, *os.File, error) {
 func NewWorkSpace(rootURL string, mntURL string, volume string) {
 	CreateReadOnlyLayer(rootURL)
 	CreateUpper(rootURL)
-	CreateWork(rootURL + "work")
+	CreateWork(rootURL)
 	CreateMountPoint(mntURL)
 	if volume != "" {
 		MountVolume(rootURL, mntURL, volume)
